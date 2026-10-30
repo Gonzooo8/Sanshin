@@ -114,7 +114,7 @@
     honcho:{name:'本調子',steps:[0,5,12]},
     niage:{name:'二揚げ',steps:[0,7,12]},
     sansage:{name:'三下げ',steps:[0,5,10]},
-    ichiniage:{name:'一二揚げ',steps:[0,5,10]}
+    ichiniage:{name:'一二揚げ',steps:[2,7,12]}
   };
   let a4=440, selected=0, audio=null, analyser=null, stream=null, raf=0, running=false;
   let smooth=[];
@@ -132,7 +132,7 @@
 
   const root=$('#root'), tuning=$('#tuning'), start=$('#start'), needle=$('#needle');
   for(let midi=43;midi<=55;midi++){
-    const n=midiToName(midi); const o=document.createElement('option'); o.value=String(midi); o.textContent=`男絃 ${n.name}${n.oct}`; if(midi===48)o.selected=true; root.appendChild(o);
+    const n=midiToName(midi); const o=document.createElement('option'); o.value=String(midi); o.textContent=`本調子基準 ${n.name}${n.oct}`; if(midi===48)o.selected=true; root.appendChild(o);
   }
   const ticks=$('#ticks');
   for(let i=-5;i<=5;i++){
