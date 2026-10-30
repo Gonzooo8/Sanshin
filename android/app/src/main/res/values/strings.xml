@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">ちんだみ</string>
+    <string name="title_activity_main">ちんだみ</string>
+    <string name="package_name">jp.ponge.sanshintuner</string>
+    <string name="custom_url_scheme">jp.ponge.sanshintuner</string>
+</resources>

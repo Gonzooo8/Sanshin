@@ -1,0 +1,31 @@
+
+# Node.js
+node_modules/
+
+# Android / Gradle
+android/.gradle/
+android/.idea/
+android/build/
+android/app/build/
+android/local.properties
+.gradle/
+
+# Android signing keys
+*.jks
+*.keystore
+*.p12
+key.properties
+
+# Passwords and environment variables
+.env
+.env.*
+*.pem
+
+# Build files
+*.apk
+*.aab
+
+# Editor and OS
+.vscode/
+.DS_Store
+Thumbs.db

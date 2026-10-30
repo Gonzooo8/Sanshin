@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="theme-color" content="#181713" />
+<link rel="manifest" href="manifest.webmanifest" />
+<title>ちんだみ — 三線チューナー</title>
+<style>
+  :root{
+    --bg:#f4f0e7;--panel:#fffdf8;--ink:#181713;--muted:#716d64;--line:#ded8cc;
+    --accent:#a33b2b;--good:#27624a;--warn:#a76f18;--shadow:0 8px 28px rgba(42,36,28,.08);
+  }
+  *{box-sizing:border-box}
+  html{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI","Yu Gothic",Meiryo,sans-serif}
+  body{margin:0;min-height:100%;background:linear-gradient(180deg,#f8f5ee 0,#f1ece2 100%)}
+  button,select{font:inherit}
+  button{cursor:pointer}
+  .app{max-width:720px;margin:0 auto;padding:18px 16px 32px}
+  header{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin:4px 2px 18px}
+  .brand{font-family:"Yu Mincho","Hiragino Mincho ProN",serif;font-size:26px;font-weight:700;letter-spacing:.06em}
+  .sub{font-size:12px;color:var(--muted);margin-top:2px;letter-spacing:.08em}
+  .settings{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+  select{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:10px;padding:10px 34px 10px 12px;min-height:44px}
+  .card{background:rgba(255,253,248,.92);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow)}
+  .tuner{padding:22px 18px 18px}
+  .mode-row{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+  .status{font-size:13px;color:var(--muted);min-height:20px}
+  .string-name{font-size:15px;font-weight:700;letter-spacing:.06em}
+  .note{font-family:ui-rounded,-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif;text-align:center;font-size:90px;line-height:1;font-weight:700;letter-spacing:-.04em;margin:16px 0 6px}
+  .oct{font-size:30px;font-weight:600;color:var(--muted);margin-left:4px}
+  .freq{text-align:center;color:var(--muted);font-variant-numeric:tabular-nums;font-size:15px;min-height:24px}
+  .meter{position:relative;height:150px;margin:6px auto 0;max-width:520px;overflow:hidden}
+  .arc{position:absolute;left:50%;bottom:-188px;width:420px;height:420px;border:1px solid var(--line);border-radius:50%;transform:translateX(-50%)}
+  .tick{position:absolute;left:50%;bottom:10px;width:1px;height:118px;transform-origin:50% 108px}
+  .tick:before{content:"";display:block;width:1px;height:10px;background:#a8a197}
+  .tick.major:before{height:16px;width:2px;background:#6c675f}
+  .tick.center:before{height:22px;width:3px;background:var(--good)}
+  .needle{position:absolute;left:50%;bottom:10px;width:3px;height:106px;border-radius:4px;background:var(--accent);transform-origin:50% 100%;transform:translateX(-50%) rotate(0deg);transition:transform .12s ease-out,background .12s}
+  .hub{position:absolute;left:50%;bottom:4px;width:14px;height:14px;background:var(--ink);border-radius:50%;transform:translateX(-50%)}
+  .cents{text-align:center;margin-top:2px;font-size:17px;font-variant-numeric:tabular-nums;font-weight:650;min-height:27px}
+  .hint{text-align:center;color:var(--muted);font-size:13px;min-height:20px}
+  .strings{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+  .string-btn{border:1px solid var(--line);background:var(--panel);border-radius:14px;padding:12px 8px;min-height:72px;color:var(--ink)}
+  .string-btn.active{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);background:#fff9f2}
+  .string-btn .jp{display:block;font-weight:700;font-size:14px}
+  .string-btn .target{display:block;margin-top:6px;font-size:19px;font-weight:700;font-variant-numeric:tabular-nums}
+  .controls{display:grid;grid-template-columns:1fr auto;gap:10px;margin-top:14px}
+  .start{border:0;background:var(--ink);color:white;border-radius:14px;padding:14px 18px;min-height:52px;font-weight:700;letter-spacing:.03em}
+  .start.running{background:#5d342b}
+  .cal{border:1px solid var(--line);background:var(--panel);border-radius:14px;padding:0 14px;min-height:52px;color:var(--ink)}
+  .guide{margin-top:16px;padding:16px 17px}
+  .guide h2{font-size:15px;margin:0 0 10px;letter-spacing:.04em}
+  .guide-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .guide-cell{border-top:1px solid var(--line);padding-top:9px}
+  .guide-cell b{display:block;font-size:13px;margin-bottom:3px}
+  .guide-cell span{font-size:12px;color:var(--muted)}
+  .foot{font-size:11px;line-height:1.65;color:var(--muted);padding:14px 4px 0}
+  .error{color:#8e2f25}
+  @media(max-width:480px){
+    header{align-items:flex-start;flex-direction:column}.settings{justify-content:flex-start;width:100%}.settings select{flex:1;min-width:0}.note{font-size:78px}.meter{height:138px}.strings{gap:7px}.string-btn{padding:10px 4px}.controls{grid-template-columns:1fr}.cal{min-height:46px}.guide-grid{grid-template-columns:1fr}.guide-cell{display:flex;justify-content:space-between;gap:12px}
+  }
+  @media(prefers-reduced-motion:reduce){.needle{transition:none}}
+</style>
+</head>
+<body>
+<main class="app">
+  <header>
+    <div><div class="brand">ちんだみ</div><div class="sub">三線チューナー</div></div>
+    <div class="settings">
+      <select id="tuning" aria-label="調弦">
+        <option value="honcho">本調子</option>
+        <option value="niage">二揚げ</option>
+        <option value="sansage">三下げ</option>
+        <option value="ichiniage">一二揚げ</option>
+      </select>
+      <select id="root" aria-label="男絃の基準音"></select>
+    </div>
+  </header>
+
+  <section class="card tuner" aria-label="チューナー">
+    <div class="mode-row"><div class="string-name" id="currentString">男絃（うーぢる）</div><div class="status" id="status">マイクを開始してください</div></div>
+    <div class="note"><span id="note">C</span><span class="oct" id="oct">3</span></div>
+    <div class="freq" id="freq">目標 130.81 Hz</div>
+
+    <div class="meter" aria-label="音程メーター">
+      <div class="arc"></div>
+      <div id="ticks"></div>
+      <div class="needle" id="needle"></div><div class="hub"></div>
+    </div>
+    <div class="cents" id="cents">0 cent</div>
+    <div class="hint" id="hint">音を鳴らしてください</div>
+
+    <div class="strings" id="strings"></div>
+    <div class="controls">
+      <button class="start" id="start">マイクを開始</button>
+      <button class="cal" id="cal">基準 A = <span id="a4label">440</span> Hz</button>
+    </div>
+  </section>
+
+  <section class="card guide">
+    <h2>いまの調弦</h2>
+    <div class="guide-grid" id="guide"></div>
+  </section>
+  <div class="foot">三線は唄や演奏者に合わせて全体の高さを変えることがあります。左上の基準音で男絃の高さを選び、3本を順番に合わせてください。マイクは端末内で音程検出にだけ使います。</div>
+</main>
+<script>
+(() => {
+  const $=s=>document.querySelector(s);
+  const noteNames=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+  const jpNames=['ド','ド♯','レ','レ♯','ミ','ファ','ファ♯','ソ','ソ♯','ラ','ラ♯','シ'];
+  const stringLabels=['男絃（うーぢる）','中絃（なかぢる）','女絃（みーぢる）'];
+  const tuningDefs={
+    honcho:{name:'本調子',steps:[0,5,12]},
+    niage:{name:'二揚げ',steps:[0,7,12]},
+    sansage:{name:'三下げ',steps:[0,5,10]},
+    ichiniage:{name:'一二揚げ',steps:[0,5,10]}
+  };
+  let a4=440, selected=0, audio=null, analyser=null, stream=null, raf=0, running=false;
+  let smooth=[];
+  let lastDetectedTime=0, previousRms=0, attackSkipFrames=0;
+
+  // 三線向けの検出設定。反応速度を保ちつつ、余韻と針の安定性を上げる。
+  const RMS_THRESHOLD=0.006;
+  const HOLD_MS=800;
+  const ATTACK_RMS=0.03;
+  const ATTACK_RATIO=2.6;
+  const ONE_EURO_MIN_CUTOFF=2.0;
+  const ONE_EURO_BETA=0.035;
+  const ONE_EURO_D_CUTOFF=1.0;
+  let euroValue=null, euroDerivative=0, euroTime=0;
+
+  const root=$('#root'), tuning=$('#tuning'), start=$('#start'), needle=$('#needle');
+  for(let midi=43;midi<=55;midi++){
+    const n=midiToName(midi); const o=document.createElement('option'); o.value=String(midi); o.textContent=`男絃 ${n.name}${n.oct}`; if(midi===48)o.selected=true; root.appendChild(o);
+  }
+  const ticks=$('#ticks');
+  for(let i=-5;i<=5;i++){
+    const d=document.createElement('div'); d.className='tick'+(i%5===0?' major':'')+(i===0?' center':''); d.style.transform=`translateX(-50%) rotate(${i*9}deg)`; ticks.appendChild(d);
+  }
+
+  function midiToName(midi){const pc=((midi%12)+12)%12;return {name:noteNames[pc],jp:jpNames[pc],oct:Math.floor(midi/12)-1,midi};}
+  function freqForMidi(midi){return a4*Math.pow(2,(midi-69)/12)}
+  function centsBetween(freq,target){return 1200*Math.log2(freq/target)}
+  function targets(){const base=Number(root.value); return tuningDefs[tuning.value].steps.map(s=>base+s);}
+  function pitchRange(){
+    const hz=targets().map(freqForMidi);
+    return {min:Math.max(55,Math.min(...hz)*0.70),max:Math.min(700,Math.max(...hz)*1.35)};
+  }
+  function resetPitchFilter(){euroValue=null;euroDerivative=0;euroTime=0;}
+  function euroAlpha(cutoff,dt){const tau=1/(2*Math.PI*cutoff);return 1/(1+tau/dt);}
+  function filterCents(value,now){
+    if(euroValue===null||!euroTime){euroValue=value;euroDerivative=0;euroTime=now;return value;}
+    const dt=Math.max(1/120,Math.min(0.25,(now-euroTime)/1000));
+    const derivative=(value-euroValue)/dt;
+    const aD=euroAlpha(ONE_EURO_D_CUTOFF,dt);
+    euroDerivative=aD*derivative+(1-aD)*euroDerivative;
+    const cutoff=ONE_EURO_MIN_CUTOFF+ONE_EURO_BETA*Math.abs(euroDerivative);
+    const a=euroAlpha(cutoff,dt);
+    euroValue=a*value+(1-a)*euroValue;
+    euroTime=now;
+    return euroValue;
+  }
+
+  function render(){
+    const ts=targets(); const strings=$('#strings'); strings.textContent='';
+    ts.forEach((m,i)=>{const n=midiToName(m); const b=document.createElement('button'); b.type='button'; b.className='string-btn'+(i===selected?' active':''); b.innerHTML=`<span class="jp">${stringLabels[i]}</span><span class="target">${n.name}${n.oct}</span>`; b.addEventListener('click',()=>{selected=i; smooth=[]; resetPitchFilter(); render(); resetMeter();}); strings.appendChild(b)});
+    const m=ts[selected], n=midiToName(m); $('#currentString').textContent=stringLabels[selected]; $('#note').textContent=n.name; $('#oct').textContent=n.oct; $('#freq').textContent=`目標 ${freqForMidi(m).toFixed(2)} Hz`;
+    const g=$('#guide'); g.textContent=''; ts.forEach((m,i)=>{const n=midiToName(m); const c=document.createElement('div'); c.className='guide-cell'; c.innerHTML=`<b>${stringLabels[i]}</b><span>${n.jp} / ${n.name}${n.oct} ・ ${freqForMidi(m).toFixed(1)} Hz</span>`;g.appendChild(c)});
+  }
+  function resetMeter(){needle.style.transform='translateX(-50%) rotate(0deg)'; needle.style.background='var(--accent)'; $('#cents').textContent='0 cent'; $('#hint').textContent=running?'音を鳴らしてください':'音を鳴らしてください';}
+
+  async function toggleMic(){
+    if(running){stopMic();return}
+    if(!navigator.mediaDevices?.getUserMedia){$('#status').textContent='このブラウザではマイクを使えません';$('#status').classList.add('error');return}
+    try{
+      stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+      audio=new (window.AudioContext||window.webkitAudioContext)(); await audio.resume();
+      analyser=audio.createAnalyser(); analyser.fftSize=4096; analyser.smoothingTimeConstant=0;
+      const source=audio.createMediaStreamSource(stream); source.connect(analyser);
+      running=true; start.textContent='停止'; start.classList.add('running'); $('#status').classList.remove('error'); $('#status').textContent='聴いています'; smooth=[]; lastDetectedTime=0; previousRms=0; attackSkipFrames=0; resetPitchFilter(); loop();
+    }catch(e){$('#status').textContent='マイクを許可してください';$('#status').classList.add('error')}
+  }
+  function stopMic(){running=false; cancelAnimationFrame(raf); stream?.getTracks().forEach(t=>t.stop()); audio?.close(); stream=audio=analyser=null; start.textContent='マイクを開始'; start.classList.remove('running'); $('#status').textContent='停止中'; resetMeter();}
+
+  function loop(){
+    if(!running||!analyser)return;
+    const buf=new Float32Array(analyser.fftSize); analyser.getFloatTimeDomainData(buf);
+    let rms=0; for(const v of buf)rms+=v*v; rms=Math.sqrt(rms/buf.length);
+    const now=performance.now();
+
+    // 強い弾き始めは倍音が暴れやすいので、急激な立ち上がりだけ1フレーム見送る。
+    if(rms>ATTACK_RMS && previousRms>0 && rms/previousRms>ATTACK_RATIO) attackSkipFrames=1;
+    previousRms=rms;
+
+    if(rms>RMS_THRESHOLD){
+      if(attackSkipFrames>0){
+        attackSkipFrames--;
+      }else{
+        const range=pitchRange();
+        const f=detectPitch(buf,audio.sampleRate,range.min,range.max);
+        if(f && f>=range.min && f<=range.max){
+          lastDetectedTime=now;
+          smooth.push(f); if(smooth.length>5)smooth.shift();
+          const sf=[...smooth].sort((a,b)=>a-b)[Math.floor(smooth.length/2)];
+          updatePitch(sf,now);
+        }
+      }
+    }else if(!lastDetectedTime || now-lastDetectedTime>HOLD_MS){
+      $('#status').textContent='音を待っています';
+      $('#hint').textContent='音を鳴らしてください';
+    }
+    raf=requestAnimationFrame(loop);
+  }
+
+  // YIN pitch detector. 三線の現在の調弦に必要な周波数帯だけを探索する。
+  function detectPitch(buffer,sampleRate,minFreq,maxFreq){
+    const threshold=0.13;
+    const minTau=Math.max(2,Math.floor(sampleRate/maxFreq));
+    const maxTau=Math.min(Math.floor(sampleRate/minFreq),Math.floor(buffer.length/2));
+    const yin=new Float32Array(maxTau+1);
+    for(let tau=1;tau<=maxTau;tau++){
+      let sum=0; for(let i=0;i<buffer.length-maxTau;i++){const d=buffer[i]-buffer[i+tau];sum+=d*d} yin[tau]=sum;
+    }
+    yin[0]=1; let runningSum=0;
+    for(let tau=1;tau<=maxTau;tau++){runningSum+=yin[tau];yin[tau]=runningSum?yin[tau]*tau/runningSum:1;}
+    let tauEstimate=-1;
+    for(let tau=minTau;tau<=maxTau;tau++){
+      if(yin[tau]<threshold){while(tau+1<=maxTau&&yin[tau+1]<yin[tau])tau++;tauEstimate=tau;break;}
+    }
+    if(tauEstimate<0)return null;
+    let better=tauEstimate;
+    if(tauEstimate>1&&tauEstimate<maxTau){
+      const s0=yin[tauEstimate-1],s1=yin[tauEstimate],s2=yin[tauEstimate+1];
+      const denom=2*(2*s1-s2-s0); if(Math.abs(denom)>1e-9) better=tauEstimate+(s2-s0)/denom;
+    }
+    return sampleRate/better;
+  }
+
+  function updatePitch(freq,now=performance.now()){
+    const ts=targets();
+    // 弦の自動切替は「別の弦の方が明確に近い」ときだけ行い、行き来を防ぐ。
+    let closest=0,best=Infinity;
+    const distances=ts.map((m,i)=>{const c=Math.abs(centsBetween(freq,freqForMidi(m))); if(c<best){best=c;closest=i} return c;});
+    const currentDistance=distances[selected];
+    if(closest!==selected && best<120 && currentDistance-best>45){
+      selected=closest;
+      smooth=[];
+      resetPitchFilter();
+      render();
+    }
+
+    const target=freqForMidi(ts[selected]);
+    const cents=centsBetween(freq,target);
+    let filtered=filterCents(cents,now);
+
+    // 中央付近のごく小さな揺れは針だけ固定。数値は実測値を表示する。
+    if(Math.abs(filtered)<0.8) filtered=0;
+    const shown=Math.max(-50,Math.min(50,filtered));
+    const deg=shown/50*45; needle.style.transform=`translateX(-50%) rotate(${deg}deg)`;
+    const inTune=Math.abs(cents)<=5; needle.style.background=inTune?'var(--good)':'var(--accent)';
+    $('#cents').textContent=`${cents>0?'+':''}${Math.round(cents)} cent`;
+    $('#freq').textContent=`${freq.toFixed(2)} Hz  /  目標 ${target.toFixed(2)} Hz`;
+    $('#status').textContent='検出中';
+    $('#hint').textContent=inTune?'合っています':(cents<0?'もう少し上げる':'もう少し下げる');
+  }
+
+  start.addEventListener('click',toggleMic);
+  tuning.addEventListener('change',()=>{selected=0;smooth=[];resetPitchFilter();render();resetMeter()});
+  root.addEventListener('change',()=>{selected=0;smooth=[];resetPitchFilter();render();resetMeter()});
+  $('#cal').addEventListener('click',()=>{const next=prompt('基準の A4 周波数（Hz）',String(a4)); if(next===null)return; const n=Number(next); if(n>=430&&n<=450){a4=n;$('#a4label').textContent=String(n);smooth=[];resetPitchFilter();render();resetMeter()}else alert('430〜450 Hz の範囲で入力してください。')});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden&&running)stopMic()});
+  render();
+  if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+})();
+</script>
+</body>
+</html>
